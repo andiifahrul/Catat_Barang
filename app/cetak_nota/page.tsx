@@ -17,7 +17,7 @@ interface NotaTransaksi {
     nama_barang: string;
     harga_jual?: number;
     harga_beli?: number;
-  } | null;
+  }[] | null; // DIUBAH: Harapkan sebuah array objek atau null
 }
 
 // Definisikan tipe data untuk Pengaturan Toko
@@ -71,7 +71,13 @@ function CetakNotaComponent() {
 
         // Proses hasil transaksi
         if (transaksiResult.error) throw transaksiResult.error;
-        setTransaksi(transaksiResult.data);
+        // Supabase V1 terkadang mengembalikan relasi sebagai array.
+        // Kita perlu memastikan tipe datanya cocok dengan apa yang diharapkan state.
+        // Meskipun .single() digunakan, relasi bisa tetap dalam bentuk array.
+        // Perubahan di interface NotaTransaksi sudah menangani ini.
+        if (transaksiResult.data) {
+          setTransaksi(transaksiResult.data as any);
+        }
 
         // Proses hasil pengaturan (tidak melempar error jika gagal, agar nota tetap tampil)
         if (pengaturanResult.error && pengaturanResult.error.code !== 'PGRST116') {
@@ -139,7 +145,10 @@ function CetakNotaComponent() {
     );
   }
   
-  const barangNota = transaksi.barang; // Sekarang langsung menjadi objek
+  // Karena 'barang' adalah array, kita ambil elemen pertama.
+  // Jika array kosong atau null, barangNota akan menjadi null.
+  const barangNota = transaksi.barang ? transaksi.barang[0] : null;
+
   const hargaSatuan = barangNota?.harga_beli || 0; // DIUBAH: Gunakan harga_beli karena harga_jual tidak ada
   const totalHarga = hargaSatuan * (transaksi.jumlah || 0);
 
