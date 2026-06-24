@@ -27,6 +27,10 @@ interface PengaturanToko {
   telepon?: string;
 }
 
+// Tandai halaman ini sebagai 'force-dynamic' untuk memastikan ia selalu di-render pada saat request.
+// Ini menyelesaikan error build yang disebabkan oleh penggunaan `useSearchParams`.
+export const dynamic = 'force-dynamic';
+
 function CetakNotaComponent() {
   const searchParams = useSearchParams();
   const transaksiId = searchParams.get("id");
