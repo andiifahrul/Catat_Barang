@@ -1,16 +1,17 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation"; // [cite: 150, 206]
-import { 
-  LayoutDashboard, 
-  Package, 
-  ArrowLeftRight, 
-  History, 
-  Settings 
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import {
+  Package,
+  ShoppingCart,
+  ShoppingBag,
+  History,
+  Settings
 } from "lucide-react"; // [cite: 137, 207]
     
 export default function BottomNav() {
   const pathname = usePathname(); // [cite: 150, 208]
+  const searchParams = useSearchParams();
   const router = useRouter(); // [cite: 209]
 
   // --- LOGIKA TAMBAHAN: SEMBUNYIKAN NAVBAR DI HALAMAN LOGIN ---
@@ -18,11 +19,11 @@ export default function BottomNav() {
 
   // Struktur menu sesuai folder kamu [cite: 141, 209]
   const navigationItems = [
-    { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard }, // [cite: 209]
-    { name: "Stok", path: "/stok", icon: Package }, // [cite: 209]
-    { name: "Transaksi", path: "/transaksi", icon: ArrowLeftRight }, // [cite: 209]
-    { name: "Riwayat", path: "/riwayat", icon: History }, // [cite: 209]
-    { name: "Pengaturan", path: "/pengaturan", icon: Settings }, // [cite: 209]
+    { name: "Stok", path: "/stok", icon: Package },    
+    { name: "Pembelian", path: "/pembelian_barang", icon: ShoppingCart },
+    { name: "Barang Keluar", path: "/barang_keluar", icon: ShoppingBag },
+    { name: "Riwayat", path: "/riwayat", icon: History },
+    { name: "Pengaturan", path: "/pengaturan", icon: Settings },
   ];
 
   return (
@@ -30,8 +31,12 @@ export default function BottomNav() {
       <div className="max-w-md mx-auto flex justify-around relative"> {/* [cite: 210] */}
         
         {navigationItems.map((item) => { // [cite: 210]
-          const Icon = item.icon; // [cite: 210]
-          const isActive = pathname === item.path; // [cite: 210]
+          const Icon = item.icon;
+          // Logika 'isActive' disesuaikan untuk menangani query parameter
+          const paramsString = searchParams.toString();
+          const queryString = paramsString ? `?${paramsString}` : '';
+          const fullPath = `${pathname}${queryString}`;
+          const isActive = fullPath === item.path;
 
           return (
             <button

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { History, Search, ArrowUpRight, ArrowDownLeft, Calendar, Loader2, X, Download } from "lucide-react";
+import Link from "next/link";
+import { History, ArrowUpRight, ArrowDownLeft, Calendar, Loader2, Download, Printer } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import Swal from "sweetalert2";
 
@@ -13,13 +14,13 @@ interface Transaksi {
   keterangan: string;
   barang: {
     nama_barang: string;
+    harga_beli?: number;
   } | null;
 }
 
 export default function RiwayatPage() {
   const [daftarRiwayat, setDaftarRiwayat] = useState<Transaksi[]>([]);
   const [loadingData, setLoadingData] = useState(true);
-  const [kataKunci, setKataKunci] = useState("");
 
   // Ambil waktu saat ini secara realtime
   const waktuSekarang = new Date();
@@ -81,7 +82,7 @@ export default function RiwayatPage() {
           jenis_transaksi,
           jumlah,
           keterangan,
-          barang ( nama_barang )
+          barang ( nama_barang, harga_beli )
         `)
         .order("created_at", { ascending: false });
 
@@ -120,11 +121,7 @@ export default function RiwayatPage() {
       return false;
     }
 
-    const namaBarang = item.barang?.nama_barang?.toLowerCase() || "";
-    const catatan = item.keterangan?.toLowerCase() || "";
-    const cari = kataKunci.toLowerCase();
-
-    return namaBarang.includes(cari) || catatan.includes(cari);
+    return true; // Hanya filter berdasarkan bulan dan tahun
   });
 
   const handleEksporCSV = () => {
@@ -139,16 +136,18 @@ export default function RiwayatPage() {
     }
 
     const namaBulanAktif = daftarNamaBulan.find(b => b.angka === filterBulan)?.nama || "";
-    const header = ["Tanggal & Jam", "Nama Barang", "Jenis Mutasi", "Jumlah (Pcs)", "Catatan / Keterangan\n"];
+    const header = ["Tanggal & Jam", "Nama Barang", "Jenis Mutasi", "Jumlah (Pcs)", "Harga Beli (per pcs)", "Total Harga", "Catatan / Keterangan\n"];
     
     const barisData = riwayatTersaring.map((item) => {
       const tanggal = new Date(item.created_at).toLocaleString("id-ID");
       const nama = item.barang?.nama_barang || "Produk Dihapus";
       const jenis = item.jenis_transaksi;
       const qty = item.jumlah;
+      const harga = item.barang?.harga_beli || 0;
+      const total = qty * harga;
       const ket = item.keterangan || "-";
       
-      return `"${tanggal}","${nama}","${jenis}",${qty},"${ket}"\n`;
+      return `"${tanggal}","${nama}","${jenis}",${qty},${harga},${total},"${ket}"\n`;
     });
 
     const kontenCSV = "\uFEFF" + header.join(",") + barisData.join("");
@@ -182,6 +181,13 @@ export default function RiwayatPage() {
     }) + " WITA";
   };
 
+  // Fungsi untuk format angka menjadi Rupiah
+  const formatRupiah = (angka: number) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency", currency: "IDR", minimumFractionDigits: 0
+    }).format(angka);
+  };
+
   return (
     <div className="p-5 max-w-md mx-auto space-y-5 pb-24">
 
@@ -203,30 +209,6 @@ export default function RiwayatPage() {
           <Download className="w-4 h-4 stroke-[3]" />
           Excel (CSV)
         </button>
-      </div>
-
-      {/* 2. KOLOM PENCARIAN REAL-TIME */}
-      <div className="relative shadow-sm">
-        <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400">
-          <Search className="w-5 h-5 stroke-[2.5]" />
-        </span>
-        <input
-          type="text"
-          value={kataKunci}
-          onChange={(e) => setKataKunci(e.target.value)}
-          disabled={daftarRiwayat.length === 0}
-          placeholder={daftarRiwayat.length === 0 ? "Belum ada transaksi nyata..." : "Cari nama produk / catatan..."}
-          className="w-full text-lg p-4 pl-12 pr-12 border-2 border-gray-300 rounded-2xl focus:border-blue-600 focus:outline-none font-bold bg-white text-black placeholder-gray-400 transition disabled:opacity-60"
-        />
-        {kataKunci && (
-          <button
-            type="button"
-            onClick={() => setKataKunci("")}
-            className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-rose-600"
-          >
-            <X className="w-5 h-5 stroke-[2.5]" />
-          </button>
-        )}
       </div>
 
       {/* 3. DROPDOWN FILTER BULAN & TAHUN DENGAN INDIKATOR ANGKA KECIL */}
@@ -311,13 +293,29 @@ export default function RiwayatPage() {
                   </span>
                 </div>
 
+                <div className="flex items-center gap-1.5 text-sm font-bold text-gray-600">
+                  <span>{formatRupiah(item.barang?.harga_beli || 0)}</span>
+                </div>
+
                 <p className="text-sm font-bold text-gray-700 leading-snug bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-100 inline-block max-w-full truncate">
                   Ket: {item.keterangan}
                 </p>
 
-                <div className="flex items-center gap-1.5 text-xs font-bold text-gray-500 pt-0.5">
-                  <Calendar className="w-3.5 h-3.5 shrink-0" />
-                  <span>{formatTanggal(item.created_at)}</span>
+                <div className="flex items-center justify-between gap-3 text-xs font-bold text-gray-500 pt-2 border-t border-gray-100 mt-2">
+                  <div className="flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 shrink-0" />
+                    <span>{formatTanggal(item.created_at)}</span>
+                  </div>
+                  
+                  {item.jenis_transaksi === "KELUAR" && (
+                    <Link
+                      href={`/cetak_nota?id=${item.id}`}
+                      className="flex items-center gap-1 text-blue-600 hover:underline"
+                    >
+                      <Printer className="w-3.5 h-3.5" />
+                      Cetak Nota
+                    </Link>
+                  )}
                 </div>
               </div>
             </div>

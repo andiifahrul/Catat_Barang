@@ -35,7 +35,7 @@ export default function LoginPage() {
       // Pasang tanda cookie untuk Satpam Middleware Next.js
       document.cookie = `session_toko=${data.session.access_token}; path=/; max-age=86400; SameSite=Lax`;
       // alert("Login Berhasil! Selamat Datang."); // Dihapus agar tidak mengganggu
-      window.location.href = "/dashboard";
+      window.location.href = "/stok";
     }
   };
 

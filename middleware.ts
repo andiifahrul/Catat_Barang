@@ -39,9 +39,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // Jika SUDAH ADA user DAN akses ke /login, maka paksa ke /dashboard
+  // Jika SUDAH ADA user DAN akses ke /login, maka paksa ke /stok
   if (user && pathname === '/login') {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    return NextResponse.redirect(new URL('/stok', request.url));
   }
 
   return response;

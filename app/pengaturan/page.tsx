@@ -1,315 +1,171 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { 
-  Settings, 
-  Store, 
-  Database, 
-  LogOut, 
-  ChevronRight, 
-  Loader2,
-  Edit2,
-  UserCheck,
-  RefreshCw
-} from "lucide-react";
-import { supabase } from "@/lib/supabase"; 
-import Swal from "sweetalert2"; // <-- 1. Import SweetAlert2 Beranimasi
+import { useState, useEffect, Suspense } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { Loader2, Save, ArrowLeft, Settings, Power } from "lucide-react";
+import Swal from "sweetalert2";
 
-export default function PengaturanPage() {
-  const [namaToko, setNamaToko] = useState("Memuat nama toko...");
-  const [emailUser, setEmailUser] = useState("");
-  const [isEditing, setIsEditing] = useState(false);
-  const [inputNamaToko, setInputNamaToko] = useState("");
+// Definisikan tipe data untuk pengaturan
+interface PengaturanToko {
+  id: number;
+  nama_toko: string;
+  alamat: string;
+  telepon: string;
+}
 
-  const [loadingProfil, setLoadingProfil] = useState(true);
-  const [loadingTombol, setLoadingTombol] = useState(false);
+function PengaturanComponent() {
+  // State untuk menyimpan data form, loading, dan status penyimpanan
+  const [settings, setSettings] = useState<Partial<PengaturanToko>>({});
+  const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const router = useRouter();
 
-  // ========================================================
-  // 1. AMBIL PROFIL USER SAAT HALAMAN DIBUKA
-  // ========================================================
+  // useEffect untuk mengambil data pengaturan saat komponen dimuat
   useEffect(() => {
-    const muatPengaturan = async () => {
-      setLoadingProfil(true);
+    const fetchSettings = async () => {
+      setLoading(true);
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          setEmailUser(user.email || "");
-          const namaTokoTersimpan = user.user_metadata?.nama_toko || "Toko Berkah Utama";
-          setNamaToko(namaTokoTersimpan);
-          setInputNamaToko(namaTokoTersimpan);
+        // Ambil data dari tabel 'pengaturan' dimana id = 1
+        const { data, error } = await supabase
+          .from("pengaturan")
+          .select("*")
+          .eq("id", 1)
+          .single();
+
+        // Jika ada error (selain baris tidak ditemukan), tampilkan pesan
+        if (error && error.code !== 'PGRST116') {
+          throw error;
         }
-      } catch (err) {
-        console.error(err);
+
+        // Jika data ditemukan, masukkan ke dalam state
+        if (data) {
+          setSettings(data);
+        }
+      } catch (err: any) {
+        Swal.fire({
+          icon: "error",
+          title: "Gagal Mengambil Data",
+          text: `Pesan Error: ${err.message}`,
+          confirmButtonColor: "#d33"
+        });
       } finally {
-        setLoadingProfil(false);
+        setLoading(false);
       }
     };
-
-    muatPengaturan();
+    fetchSettings();
   }, []);
 
-  // ========================================================
-  // 2. FUNGSI UBAH NAMA TOKO & SIMPAN KE METADATA SUPABASE
-  // ========================================================
-  const handleSimpanNamaToko = async () => {
-    if (!inputNamaToko.trim()) {
-      Swal.fire({
-        icon: "warning",
-        title: "Nama Toko Kosong!",
-        text: "Nama toko tidak boleh dikosongkan ya, Ayah/Ibu.",
-        confirmButtonColor: "#2563eb",
-        confirmButtonText: "Perbaiki"
-      });
-      return;
-    }
-    setLoadingTombol(true);
+  // Handler untuk memperbarui state saat input di form berubah
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setSettings(prev => ({ ...prev, [name]: value }));
+  };
 
-    const { error } = await supabase.auth.updateUser({
-      data: { nama_toko: inputNamaToko }
-    });
-
-    if (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Gagal Mengubah!",
-        text: error.message,
-        confirmButtonColor: "#dc2626"
-      });
-    } else {
-      setNamaToko(inputNamaToko);
-      setIsEditing(false);
-      
-      // Toast/Notifikasi sukses kecil di pojok kanan atas agar tidak mengganggu
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+    try {
+      const { error } = await supabase.from("pengaturan").upsert({ id: 1, ...settings });
+      if (error) throw error;
       Swal.fire({
         icon: "success",
-        title: "Nama toko berhasil diperbarui!",
-        showConfirmButton: false,
+        title: "Berhasil!",
+        text: "Pengaturan telah berhasil disimpan.",
         timer: 2000,
-        toast: true,
-        position: "top-end"
+        showConfirmButton: false,
       });
+    } catch (err: any) {
+      Swal.fire({
+        icon: "error",
+        title: "Gagal Menyimpan",
+        text: `Pesan Error: ${err.message}`,
+        confirmButtonColor: "#d33"
+      });
+    } finally {
+      setIsSaving(false);
     }
-    setLoadingTombol(false);
   };
 
-  // ========================================================
-  // 3. FUNGSI SINKRONISASI / RESET CACHE APLIKASI
-  // ========================================================
-  const handleResetAplikasi = () => {
-    Swal.fire({
-      title: "Segarkan Aplikasi?",
-      text: "Halaman akan dimuat ulang untuk membersihkan sisa ketikan yang macet.",
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonColor: "#d97706", // Warna amber/oranye
-      cancelButtonColor: "#6b7280",
-      confirmButtonText: "Ya, Segarkan",
-      cancelButtonText: "Batal",
-      reverseButtons: true
-    }).then((result) => {
-      if (result.isConfirmed) {
-        window.location.reload();
-      }
-    });
-  };
-
-  // ========================================================
-  // 4. FUNGSI CEK AMANKAN DATA (VERIFIKASI REALTIME CLOUD)
-  // ========================================================
-  const handleCekBackup = async () => {
-    setLoadingTombol(true);
-    
-    const { error } = await supabase.from("barang").select("id", { count: "exact", head: true });
-    
-    setLoadingTombol(false);
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
     if (error) {
       Swal.fire({
         icon: "error",
-        title: "Koneksi Terganggu!",
+        title: "Gagal Logout!",
         text: error.message,
-        confirmButtonColor: "#dc2626"
+        confirmButtonColor: "#d33"
       });
     } else {
-      Swal.fire({
-        icon: "success",
-        title: "Koneksi Cloud Aman!",
-        text: "Seluruh catatan pembukuan Anda sudah dicadangkan secara otomatis di internet.",
-        confirmButtonColor: "#16a34a",
-        confirmButtonText: "Alhamdulillah"
-      });
+      router.push("/login"); // Redirect to login page after successful logout
     }
   };
 
-  // ========================================================
-  // 5. FUNGSI LOGOUT (PUTUS SESI & HAPUS COOKIE)
-  // ========================================================
-  const handleLogout = async () => {
-    Swal.fire({
-      title: "Yakin Ingin Keluar?",
-      text: "Ayah/Ibu harus memasukkan email & kata sandi lagi nanti untuk masuk kembali.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#dc2626", // Merah tegas
-      cancelButtonColor: "#6b7280",
-      confirmButtonText: "Ya, Keluar Akun",
-      cancelButtonText: "Tetap Masuk",
-      reverseButtons: true
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        setLoadingTombol(true);
-        await supabase.auth.signOut();
-        document.cookie = "session_toko=; path=/; max-age=0; SameSite=Lax";
-
-        Swal.fire({
-          icon: "success",
-          title: "Berhasil Keluar!",
-          text: "Sampai jumpa kembali, semoga usahanya tambah berkah!",
-          showConfirmButton: false,
-          timer: 2500
-        }).then(() => {
-          window.location.href = "/login";
-        });
-      }
-    });
-  };
-
-  if (loadingProfil) {
+  if (loading) {
     return (
-      <div className="p-5 max-w-md mx-auto flex flex-col items-center justify-center py-20 gap-3 text-gray-600 font-bold bg-white rounded-2xl border border-gray-200 shadow-sm min-h-[50vh]">
-        <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
-        <span className="text-lg">Memuat Pengaturan Toko...</span>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
+        <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
+        <p className="mt-4 text-lg font-semibold text-gray-700">Memuat Pengaturan...</p>
       </div>
     );
   }
 
   return (
-    <div className="p-5 max-w-md mx-auto space-y-6">
-      
-      {/* 1. HEADER HALAMAN */}
-      <div className="flex items-center gap-3 bg-white p-4 rounded-2xl shadow-sm border border-gray-200">
-        <Settings className="text-blue-600 w-8 h-8" />
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Pengaturan</h1>
-          <p className="text-sm text-gray-600 font-medium">Atur aplikasi dan database toko</p>
+    <div className="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+      <main className="w-full max-w-md bg-white rounded-2xl shadow-lg p-6 md:p-8 space-y-6">
+        <header className="flex items-center gap-3">
+          <Settings className="w-8 h-8 text-blue-600" />
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">Pengaturan Toko</h1>
+            <p className="text-sm text-gray-500">Ubah informasi toko yang tampil di nota.</p>
+          </div>
+        </header>
+
+        <form onSubmit={handleSave} className="space-y-4">
+          <div>
+            <label htmlFor="nama_toko" className="block text-sm font-medium text-gray-700 mb-1">Nama Toko</label>
+            <input type="text" name="nama_toko" id="nama_toko" value={settings.nama_toko || ""} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+          </div>
+          <div>
+            <label htmlFor="alamat" className="block text-sm font-medium text-gray-700 mb-1">Alamat</label>
+            <input type="text" name="alamat" id="alamat" value={settings.alamat || ""} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+          </div>
+          <div>
+            <label htmlFor="telepon" className="block text-sm font-medium text-gray-700 mb-1">Nomor Telepon</label>
+            <input type="text" name="telepon" id="telepon" value={settings.telepon || ""} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+          </div>
+
+          <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4">
+            <Link href="/" className="w-full text-center bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2">
+              <ArrowLeft className="w-5 h-5" />
+              Kembali
+            </Link>
+            <button type="submit" disabled={isSaving || loading} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-md active:scale-95 transition flex items-center justify-center gap-2 disabled:bg-blue-400 disabled:cursor-not-allowed">
+              {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+              {isSaving ? "Menyimpan..." : "Simpan Perubahan"}
+            </button>
+          </div>
+        </form>
+
+        <div className="pt-4">
+          <button
+            onClick={handleLogout}
+            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg shadow-md active:scale-95 transition flex items-center justify-center gap-2"
+          >
+            <Power className="w-5 h-5" />
+            Logout
+          </button>
         </div>
-      </div>
-
-      {/* 2. KARTU PROFIL TOKO */}
-      <div className="bg-white p-5 rounded-2xl shadow-md border border-gray-200 flex flex-col gap-3">
-        <div className="flex items-center gap-4">
-          <div className="bg-blue-100 p-3 rounded-xl border border-blue-200 text-blue-700 shrink-0">
-            <Store className="w-8 h-8" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <span className="block text-xs font-bold uppercase tracking-wider text-gray-500">Nama Usaha / Toko</span>
-            
-            {isEditing ? (
-              <div className="flex gap-2 mt-1">
-                <input
-                  type="text"
-                  value={inputNamaToko}
-                  onChange={(e) => setInputNamaToko(e.target.value)}
-                  disabled={loadingTombol}
-                  className="border-2 border-blue-500 rounded-lg px-2 py-1 text-base font-bold w-full text-black bg-white"
-                />
-                <button
-                  onClick={handleSimpanNamaToko}
-                  disabled={loadingTombol}
-                  className="bg-blue-600 text-white px-3 py-1 rounded-lg text-sm font-bold shadow-sm"
-                >
-                  Simpan
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl font-black text-black truncate leading-tight">
-                  {namaToko}
-                </h2>
-                <button 
-                  onClick={() => setIsEditing(true)} 
-                  className="text-gray-400 hover:text-blue-600 p-1 shrink-0"
-                >
-                  <Edit2 className="w-4 h-4" />
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* 3. GRUP PENGATURAN UTAMA */}
-      <div className="bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden divide-y divide-gray-100">
-        
-        {/* INFO STATUS ADMIN */}
-        <div className="p-5 flex items-center gap-3 bg-gray-50/50">
-          <div className="bg-blue-50 text-blue-600 p-2 rounded-xl border border-blue-100">
-            <UserCheck className="w-6 h-6" />
-          </div>
-          <div className="min-w-0">
-            <h3 className="text-base font-bold text-gray-500 uppercase tracking-wider leading-none">Petugas Terdaftar</h3>
-            <p className="text-base font-black text-black truncate mt-1">{emailUser}</p>
-          </div>
-        </div>
-
-        {/* REFRESH / BERSIHKAN LAYAR */}
-        <button 
-          onClick={handleResetAplikasi}
-          type="button" 
-          disabled={loadingTombol}
-          className="w-full p-5 flex items-center justify-between text-left hover:bg-gray-50 transition group disabled:opacity-50"
-        >
-          <div className="flex items-center gap-3">
-            <div className="bg-amber-100 text-amber-700 p-2 rounded-xl border border-amber-200">
-              <RefreshCw className="w-6 h-6" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-black leading-tight">Segarkan Aplikasi</h3>
-              <p className="text-xs font-bold text-gray-600">Besihkan sisa ketikan & reset layar harian</p>
-            </div>
-          </div>
-          <ChevronRight className="w-6 h-6 text-gray-400 group-hover:text-gray-700 transition" />
-        </button>
-
-        {/* AMANKAN DATA */}
-        <button 
-          onClick={handleCekBackup}
-          type="button" 
-          disabled={loadingTombol}
-          className="w-full p-5 flex items-center justify-between text-left hover:bg-gray-50 transition group disabled:opacity-50"
-        >
-          <div className="flex items-center gap-3">
-            <div className="bg-emerald-100 text-emerald-700 p-2 rounded-xl border border-emerald-200">
-              <Database className="w-6 h-6" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-black leading-tight">Amankan Data Toko</h3>
-              <p className="text-xs font-bold text-gray-600">Periksa cadangan data cloud internet</p>
-            </div>
-          </div>
-          {loadingTombol ? (
-            <Loader2 className="w-6 h-6 text-gray-400 animate-spin" />
-          ) : (
-            <ChevronRight className="w-6 h-6 text-gray-400 group-hover:text-gray-700 transition" />
-          )}
-        </button>
-
-      </div>
-
-      {/* 4. TOMBOL KELUAR APLIKASI */}
-      <button
-        onClick={handleLogout}
-        type="button"
-        disabled={loadingTombol}
-        className="w-full bg-rose-100 hover:bg-rose-200 border-2 border-rose-300 text-rose-900 font-black text-lg py-4 px-4 rounded-xl flex items-center justify-center gap-2 transition active:scale-95 shadow-sm disabled:opacity-50"
-      >
-        {loadingTombol ? (
-          <Loader2 className="w-6 h-6 animate-spin" />
-        ) : (
-          <LogOut className="w-6 h-6 stroke-[3]" />
-        )}
-        Keluar dari Aplikasi
-      </button>
-
+      </main>
     </div>
+  );
+}
+
+export default function PengaturanPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PengaturanComponent />
+    </Suspense>
   );
 }
