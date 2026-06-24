@@ -17,7 +17,7 @@ interface NotaTransaksi {
     nama_barang: string;
     harga_jual?: number;
     harga_beli?: number;
-  }[] | null; // <--- Ubah ini menjadi array objek
+  } | null;
 }
 
 // Definisikan tipe data untuk Pengaturan Toko
@@ -58,7 +58,7 @@ function CetakNotaComponent() {
         const [transaksiResult, pengaturanResult] = await Promise.all([
           supabase
             .from("transaksi")
-            .select(`id, created_at, jumlah, keterangan, barang ( nama_barang, harga_beli, harga_jual )`)
+            .select(`id, created_at, jumlah, keterangan, barang ( nama_barang, harga_beli )`)
             .eq("id", transaksiId)
             .eq("jenis_transaksi", "KELUAR")
             .single(),
@@ -139,8 +139,8 @@ function CetakNotaComponent() {
     );
   }
   
-  const barangNota = transaksi.barang ? transaksi.barang[0] : null; // Ambil barang pertama dari array
-  const hargaSatuan = barangNota?.harga_jual || barangNota?.harga_beli || 0;
+  const barangNota = transaksi.barang; // Sekarang langsung menjadi objek
+  const hargaSatuan = barangNota?.harga_beli || 0; // DIUBAH: Gunakan harga_beli karena harga_jual tidak ada
   const totalHarga = hargaSatuan * (transaksi.jumlah || 0);
 
   return (
@@ -150,7 +150,7 @@ function CetakNotaComponent() {
     >
       <main 
         id="printable-area" 
-        className="w-full max-w-sm bg-white rounded-2xl shadow-lg p-6 space-y-6 print:shadow-none print:rounded-none"
+        className="w-full max-w-sm bg-white rounded-2xl shadow-lg p-6 space-y-5 print:shadow-none print:rounded-none"
       >
         
         <header className="text-center space-y-1 border-b-2 border-dashed border-gray-300 pb-4">
@@ -198,24 +198,24 @@ function CetakNotaComponent() {
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
             }
-            /* 1. Sembunyikan semua elemen di body dari pandangan */
-            body * {
+            /* 1. Sembunyikan semua elemen di body dari pandangan, KECUALI area cetak */
+            body > *:not(#print-wrapper) {
               visibility: hidden;
             }
-            /* 2. Reset semua style pembungkus agar tidak memakan tempat */
-            #print-wrapper, #__next, main {
-              all: unset !important;
-            }
-            /* 3. Tampilkan HANYA area nota dan semua isinya */
+            /* 2. Tampilkan HANYA area nota dan semua isinya */
             #printable-area, #printable-area * {
               visibility: visible;
             }
-            /* 4. Posisikan nota di pojok kiri atas halaman cetak */
+            /* 3. Posisikan nota di pojok kiri atas halaman cetak */
             #printable-area {
               position: absolute;
               left: 0;
               top: 0;
               width: 100%;
+            }
+            /* 4. Pastikan wrapper tidak memakan tinggi halaman */
+            #print-wrapper {
+              min-height: unset !important;
             }          }
         `}</style>
       </main>

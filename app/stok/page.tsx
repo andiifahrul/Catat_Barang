@@ -4,16 +4,37 @@ import { useState, useEffect } from "react";
 import { Package, ClipboardList, Loader2, Trash2, Search, Plus, RefreshCw, ServerCrash } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import Swal from "sweetalert2";
-import { useBarang, type Barang } from "@/lib/hooks"; // Impor hook SWR kustom dan tipe Barang
+
+// Definisikan tipe Barang langsung di sini karena hook tidak lagi digunakan
+interface Barang {
+  id: string;
+  nama_barang: string;
+  stok: number;
+}
 
 export default function StokPage() {
-  const { data: daftarBarang, isLoading: loadingData, error, mutate } = useBarang();
+  // Mengganti SWR dengan state management manual
+  const [daftarBarang, setDaftarBarang] = useState<Barang[] | null>(null);
+  const [loadingData, setLoadingData] = useState(true);
+  const [error, setError] = useState<any>(null);
   const [hasilPencarian, setHasilPencarian] = useState<Barang[]>([]);
   const [kataKunci, setKataKunci] = useState("");
 
+  // Fungsi untuk mengambil data dari Supabase, menggantikan SWR
+  const fetchData = async () => {
+    setLoadingData(true);
+    const { data, error: fetchError } = await supabase
+      .from("barang")
+      .select("id, nama_barang, stok")
+      .order("created_at", { ascending: false });
+
+    if (fetchError) setError(fetchError);
+    else setDaftarBarang(data);
+    setLoadingData(false);
+  };
+
   // Efek untuk melakukan filter pencarian setiap kali kata kunci atau daftar barang berubah
   useEffect(() => {
-    // Jika tidak ada daftarBarang (misal saat loading atau error), set hasil pencarian ke array kosong
     if (!daftarBarang) {
       setHasilPencarian([]);
       return;
@@ -28,6 +49,11 @@ export default function StokPage() {
       setHasilPencarian(hasilFilter);
     }
   }, [kataKunci, daftarBarang]);
+
+  // Efek untuk mengambil data saat komponen pertama kali dimuat
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   // ========================================================
   // 3. FUNGSI HAPUS PRODUK DENGAN DUA TOMBOL KONFIRMASI
@@ -65,9 +91,8 @@ export default function StokPage() {
             confirmButtonColor: "#16a34a",
             timer: 2000
           });
-          // Panggil `mutate()` dari SWR untuk memberitahu SWR agar mengambil ulang data
-          // dan memperbarui cache secara otomatis.
-          mutate();
+          // Panggil fetchData untuk memuat ulang data setelah hapus
+          fetchData();
         }
       }
     });
@@ -125,9 +150,8 @@ export default function StokPage() {
         Swal.fire("Berhasil!", `Stok ${nama} telah diperbarui menjadi ${stokBaru}.`, "success");
       }
 
-      // Panggil `mutate()` dari SWR untuk memperbarui data di cache setelah stok diubah.
-      // UI akan otomatis ter-update dengan data terbaru.
-      mutate();
+      // Panggil fetchData untuk memuat ulang data setelah update stok
+      fetchData();
     }
   };
 
@@ -150,8 +174,8 @@ export default function StokPage() {
               <ClipboardList className="text-blue-600 w-6 h-6" />
               <h2 className="text-xl font-bold text-gray-800">Daftar Produk ({hasilPencarian.length})</h2>
             </div>
-            {/* Tombol untuk refresh data secara manual */}
-            <button onClick={() => mutate()} className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition">
+            {/* Tombol untuk refresh data secara manual, sekarang memanggil fetchData */}
+            <button onClick={fetchData} className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition">
               <RefreshCw className={`w-5 h-5 ${loadingData ? 'animate-spin' : ''}`} />
             </button>
           </div>
