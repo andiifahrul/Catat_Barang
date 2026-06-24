@@ -213,8 +213,8 @@ interface InputFieldProps {
 }
 
 // Komponen Helper untuk Input Field (Prinsip DRY)
-// Terapkan tipe yang sudah didefinisikan ke dalam komponen
-const InputField = ({ icon: Icon, prefix, label, value, onChange, placeholder, type = "text", required = false }: InputFieldProps) => (
+// Terapkan tipe yang sudah didefinisikan ke dalam komponen secara eksplisit
+const InputField: React.FC<InputFieldProps> = ({ icon: Icon, prefix, label, value, onChange, placeholder, type = "text", required = false }) => (
   <div>
     <label className="block text-base font-bold text-gray-900 mb-1">
       {label} {required && <span className="text-red-500">*</span>}
