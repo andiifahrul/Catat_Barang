@@ -27,9 +27,10 @@ interface PengaturanToko {
   telepon?: string;
 }
 
-// Tandai halaman ini sebagai 'force-dynamic' untuk memastikan ia selalu di-render pada saat request.
-// Ini menyelesaikan error build yang disebabkan oleh penggunaan `useSearchParams`.
-export const dynamic = 'force-dynamic';
+// Tandai halaman ini sebagai 'force-dynamic' untuk memastikan ia selalu di-render pada saat request (SSR).
+// Ini penting karena penggunaan `useSearchParams` membuat halaman ini tidak bisa di-generate secara statis.
+// Dengan ini, Next.js tidak akan mencoba me-render halaman ini saat build, yang menyelesaikan error `missing-suspense-with-csr-bailout`.
+export const dynamic = "force-dynamic";
 
 function CetakNotaComponent() {
   const searchParams = useSearchParams();
