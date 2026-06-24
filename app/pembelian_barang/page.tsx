@@ -23,8 +23,8 @@ export default function PembelianPage() {
 
   // Helper untuk memastikan input hanya angka (tanpa format)
   const formatAngkaSaja = (angka: string) => {
-    const number_string = angka.replace(/[^,\d]/g, "").toString();
-    return number_string;
+    // Hanya izinkan angka. Hapus semua karakter non-digit.
+    return angka.replace(/\D/g, "");
   };
 
   // ========================================================
@@ -45,8 +45,8 @@ export default function PembelianPage() {
       return;
     }
 
-    const jumlahBeli = parseInt(jumlah.replace(/\./g, ''));
-    const hargaBeliAngka = parseFloat(hargaBeli.replace(/\./g, ''));
+    const jumlahBeli = parseInt(formatAngkaSaja(jumlah));
+    const hargaBeliAngka = parseFloat(formatAngkaSaja(hargaBeli));
 
     if (jumlahBeli <= 0 || hargaBeliAngka <= 0) {
       Swal.fire({

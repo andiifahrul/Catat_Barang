@@ -54,7 +54,7 @@ function CetakNotaComponent() {
         const [transaksiResult, pengaturanResult] = await Promise.all([
           supabase
             .from("transaksi")
-            .select(`id, created_at, jumlah, keterangan, barang ( nama_barang, harga_beli )`)
+            .select(`id, created_at, jumlah, keterangan, barang ( nama_barang, harga_beli, harga_jual )`)
             .eq("id", transaksiId)
             .eq("jenis_transaksi", "KELUAR")
             .single(),
