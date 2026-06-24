@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import useSWR from 'swr';
 import { Package, ClipboardList, Loader2, Trash2, Search, Plus, RefreshCw, ServerCrash } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import Swal from "sweetalert2"; 
@@ -14,7 +13,7 @@ interface Barang {
 }
 
 export default function StokPage() {
-  const { data: daftarBarang, isLoading: loadingData, error, mutate } = useSWR<Barang[]>(...useBarang());
+  const { data: daftarBarang, isLoading: loadingData, error, mutate } = useBarang();
   const [hasilPencarian, setHasilPencarian] = useState<Barang[]>([]);
   const [kataKunci, setKataKunci] = useState("");
 
