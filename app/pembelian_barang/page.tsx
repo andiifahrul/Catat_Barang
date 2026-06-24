@@ -200,8 +200,21 @@ export default function PembelianPage() {
   );
 }
 
+// Definisikan tipe untuk props dari InputField agar lebih jelas dan aman
+interface InputFieldProps {
+  icon?: React.ElementType;
+  prefix?: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  type?: string;
+  required?: boolean;
+}
+
 // Komponen Helper untuk Input Field (Prinsip DRY)
-const InputField = ({ icon: Icon, prefix, label, value, onChange, placeholder, type = "text", required = false }) => (
+// Terapkan tipe yang sudah didefinisikan ke dalam komponen
+const InputField = ({ icon: Icon, prefix, label, value, onChange, placeholder, type = "text", required = false }: InputFieldProps) => (
   <div>
     <label className="block text-base font-bold text-gray-900 mb-1">
       {label} {required && <span className="text-red-500">*</span>}
