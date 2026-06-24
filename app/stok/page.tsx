@@ -3,14 +3,8 @@
 import { useState, useEffect } from "react";
 import { Package, ClipboardList, Loader2, Trash2, Search, Plus, RefreshCw, ServerCrash } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import Swal from "sweetalert2"; 
-import { useBarang } from "@/lib/hooks"; // Impor hook SWR kustom
-
-interface Barang {
-  id: string;
-  nama_barang: string;
-  stok: number;
-}
+import Swal from "sweetalert2";
+import { useBarang, type Barang } from "@/lib/hooks"; // Impor hook SWR kustom dan tipe Barang
 
 export default function StokPage() {
   const { data: daftarBarang, isLoading: loadingData, error, mutate } = useBarang();

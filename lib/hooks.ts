@@ -1,7 +1,7 @@
 import useSWR from 'swr';
 import { supabase } from './supabase';
 
-interface Barang {
+export interface Barang {
   id: string;
   nama_barang: string;
   stok: number;
