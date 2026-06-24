@@ -17,7 +17,7 @@ interface NotaTransaksi {
     nama_barang: string;
     harga_jual?: number;
     harga_beli?: number;
-  } | null;
+  }[] | null; // <--- Ubah ini menjadi array objek
 }
 
 // Definisikan tipe data untuk Pengaturan Toko
@@ -135,8 +135,9 @@ function CetakNotaComponent() {
     );
   }
   
-  const hargaSatuan = transaksi.barang?.harga_jual || transaksi.barang?.harga_beli || 0;
-  const totalHarga = hargaSatuan * transaksi.jumlah;
+  const barangNota = transaksi.barang ? transaksi.barang[0] : null; // Ambil barang pertama dari array
+  const hargaSatuan = barangNota?.harga_jual || barangNota?.harga_beli || 0;
+  const totalHarga = hargaSatuan * (transaksi.jumlah || 0);
 
   return (
     <div 
@@ -167,7 +168,7 @@ function CetakNotaComponent() {
             <p className="col-span-2">Barang</p><p className="text-center">Qty</p><p className="col-span-2 text-right">Subtotal</p>
           </div>
           <div className="grid grid-cols-5 gap-2 text-sm">
-            <div className="col-span-2 space-y-0.5"><p className="font-bold text-gray-800 leading-tight">{transaksi.barang?.nama_barang || "Nama Barang Error"}</p><p className="text-xs text-gray-600">{formatRupiah(hargaSatuan)}</p></div>
+            <div className="col-span-2 space-y-0.5"><p className="font-bold text-gray-800 leading-tight">{barangNota?.nama_barang || "Nama Barang Error"}</p><p className="text-xs text-gray-600">{formatRupiah(hargaSatuan)}</p></div>
             <p className="text-center font-medium text-gray-700">x{transaksi.jumlah}</p>
             <p className="col-span-2 text-right font-bold text-gray-800">{formatRupiah(totalHarga)}</p>
           </div>
