@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Package, ClipboardList, Loader2, Trash2, Search, Plus, RefreshCw } from "lucide-react";
+import { Package, ClipboardList, Loader2, Trash2, Search, Plus, RefreshCw, ServerCrash } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import Swal from "sweetalert2"; 
-import { useBarang } from "@/lib/hooks";
+import { useBarang } from "@/lib/hooks"; // Impor hook SWR kustom
 
 interface Barang {
   id: string;
@@ -13,8 +13,6 @@ interface Barang {
 }
 
 export default function StokPage() {
-  // Gunakan SWR untuk data fetching.
-  // 'data' akan berisi data barang, 'isLoading' untuk status loading, 'mutate' untuk revalidasi manual
   const { data: daftarBarang, isLoading: loadingData, error, mutate } = useBarang();
   const [hasilPencarian, setHasilPencarian] = useState<Barang[]>([]);
   const [kataKunci, setKataKunci] = useState("");
@@ -73,7 +71,8 @@ export default function StokPage() {
             confirmButtonColor: "#16a34a",
             timer: 2000
           });
-          // Alih-alih fetch ulang, kita panggil `mutate` dari SWR
+          // Panggil `mutate()` dari SWR untuk memberitahu SWR agar mengambil ulang data
+          // dan memperbarui cache secara otomatis.
           mutate();
         }
       }
@@ -132,7 +131,8 @@ export default function StokPage() {
         Swal.fire("Berhasil!", `Stok ${nama} telah diperbarui menjadi ${stokBaru}.`, "success");
       }
 
-      // Panggil `mutate` dari SWR untuk memperbarui data di cache
+      // Panggil `mutate()` dari SWR untuk memperbarui data di cache setelah stok diubah.
+      // UI akan otomatis ter-update dengan data terbaru.
       mutate();
     }
   };
@@ -182,9 +182,9 @@ export default function StokPage() {
               <span>Memuat data dari internet...</span>
             </div>
           ) : error ? (
-            <div className="text-center py-12 text-red-600 font-bold flex flex-col items-center gap-2">
-              <span>Gagal memuat data.</span>
-              <span className="text-sm font-normal text-gray-500">{error.message}</span>
+            <div className="text-center py-12 text-red-600 font-bold flex flex-col items-center gap-3 border-2 border-dashed border-red-200 rounded-xl bg-red-50/50">
+              <ServerCrash className="w-10 h-10" />
+              <span>Gagal memuat data. Coba refresh.</span>
             </div>
           ) : hasilPencarian.length === 0 ? (
             <div className="text-center py-10 text-gray-500 text-lg font-bold border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50">

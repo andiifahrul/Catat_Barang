@@ -1,7 +1,8 @@
 import useSWR from 'swr';
 import { supabase } from './supabase';
 
-// Sebuah "fetcher" universal untuk Supabase
+// Sebuah "fetcher" universal yang akan digunakan oleh semua hook SWR kita.
+// Fungsi ini menerima query dari Supabase dan mengembalikan datanya.
 const supabaseFetcher = async (query: any) => {
   const { data, error } = await query;
 
@@ -11,5 +12,7 @@ const supabaseFetcher = async (query: any) => {
   return data;
 };
 
-// Hook kustom untuk mengambil data barang
+// Hook kustom untuk mengambil data barang.
+// Anda bisa membuat hook serupa untuk data lain (misal: useRiwayat, usePengaturan).
+// SWR akan otomatis meng-cache hasil dari query ini.
 export const useBarang = () => useSWR(supabase.from('barang').select('id, nama_barang, stok').order('created_at', { ascending: false }), supabaseFetcher);
