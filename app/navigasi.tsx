@@ -9,7 +9,7 @@ import {
   Settings
 } from "lucide-react"; // [cite: 137, 207]
     
-export default function BottomNav() {
+export default function Navigasi() {
   const pathname = usePathname(); // [cite: 150, 208]
   const searchParams = useSearchParams();
   const router = useRouter(); // [cite: 209]
