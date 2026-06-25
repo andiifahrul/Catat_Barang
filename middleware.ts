@@ -49,6 +49,15 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|manifest.json|icon|screenshot|.*\\.png$).*)',
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - _not-found (Next.js 404 page)
+     * - favicon.ico (favicon file)
+     * - other static assets in /public
+     */
+    '/((?!api|_next/static|_next/image|_not-found|favicon.ico|manifest.json|icon|screenshot|.*\\.png$).*)',
   ],
 };
