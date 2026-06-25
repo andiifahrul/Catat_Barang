@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Suspense } from "react"; // 1. Tambahkan import Suspense
 import "./globals.css";
-
-// 1. CARA IMPORT YANG BENAR (Tanpa kurung kurawal {})
 import Navigasi from "./navigasi"; 
 
 const geistSans = Geist({
@@ -31,16 +30,16 @@ export default function RootLayout({
       lang="id"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      {/* Ditambahkan bg-gray-50 agar tampilan aplikasi mobile terasa empuk di mata */}
       <body className="min-h-full flex flex-col bg-gray-50">
         
-        {/* 2. Diberikan pb-24 agar konten halaman tidak tertutup menu bawah */}
         <main className="flex-1 pb-24">
           {children}
         </main>
 
-        {/* 3. Komponen navigasi melayangmu dipanggil di sini */}
-        <Navigasi />
+        {/* 2. Bungkus dengan Suspense agar build Vercel tidak error */}
+        <Suspense fallback={null}>
+          <Navigasi />
+        </Suspense>
         
       </body>
     </html>

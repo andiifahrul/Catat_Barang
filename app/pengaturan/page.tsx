@@ -120,7 +120,7 @@ function PengaturanComponent() {
           <Settings className="w-8 h-8 text-blue-600" />
           <div>
             <h1 className="text-2xl font-bold text-gray-800">Pengaturan Toko</h1>
-            <p className="text-sm text-gray-500">Ubah informasi toko yang tampil di nota.</p>
+            <p className="text-sm text-gray-500">Ubah informasi dasar mengenai toko Anda.</p>
           </div>
         </header>
 
