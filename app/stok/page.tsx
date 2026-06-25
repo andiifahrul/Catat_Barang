@@ -179,7 +179,7 @@ export default function StokPage() {
       <div className="bg-white p-5 rounded-2xl shadow-md border border-gray-200">
           <div className="flex items-center gap-2 mb-4 border-b border-gray-100 pb-2">
             <div className="flex items-center gap-2 flex-1">
-              <ClipboardList className="text-blue-600 w-6 h-6" />
+              <ClipboardList className="text-blue-600 w-8 h-8" />
               <h2 className="text-xl font-bold text-gray-800">Daftar Produk ({hasilPencarian.length})</h2>
             </div>
             {/* Tombol untuk refresh data secara manual, sekarang memanggil fetchData */}
@@ -198,7 +198,7 @@ export default function StokPage() {
               value={kataKunci}
               onChange={(e) => setKataKunci(e.target.value)}
               placeholder="Cari nama barang..."
-              className="w-full text-lg p-3.5 pl-12 border-2 border-gray-300 rounded-xl focus:border-blue-600 focus:outline-none font-medium bg-gray-50 text-black placeholder-gray-500"
+              className="w-full text-base p-3.5 pl-12 border-2 border-gray-300 rounded-xl focus:border-blue-600 focus:outline-none font-medium bg-gray-50 text-black placeholder-gray-500"
             />
           </div>
 
@@ -209,7 +209,7 @@ export default function StokPage() {
             </div>
           ) : error ? (
             <div className="text-center py-12 text-red-600 font-bold flex flex-col items-center gap-3 border-2 border-dashed border-red-200 rounded-xl bg-red-50/50">
-              <ServerCrash className="w-10 h-10" />
+              <ServerCrash className="w-8 h-8" />
               <span>Gagal memuat data. Coba refresh.</span>
             </div>
           ) : hasilPencarian.length === 0 ? (
@@ -226,13 +226,13 @@ export default function StokPage() {
                   className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 gap-2 hover:bg-gray-100/70 transition"
                 >
                   <div className="space-y-1 min-w-0 flex-1">
-                    <p className="text-lg font-black text-black leading-tight truncate">{barang.nama_barang}</p>
+                    <p className="text-base font-black text-black leading-tight truncate">{barang.nama_barang}</p>
                   </div>
                   
                   <div className="flex items-center gap-3 shrink-0">
                     <div className="bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-lg text-center min-w-[65px]">
                       <span className="block text-[10px] text-blue-700 font-black uppercase tracking-wider">Stok</span>
-                      <span className="text-lg font-black text-blue-900">{barang.stok}</span>
+                      <span className="text-base font-black text-blue-900">{barang.stok}</span>
                     </div>
 
                     <button

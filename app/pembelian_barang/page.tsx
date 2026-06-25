@@ -153,7 +153,7 @@ export default function PembelianPage() {
 
       {/* 2. FORM TRANSAKSI UTAMA */}
       <div className="bg-white p-5 rounded-2xl shadow-md border border-gray-200">
-        <form onSubmit={handleSimpanPembelian} className="space-y-4">
+        <form onSubmit={handleSimpanPembelian} className="space-y-5">
           
           <InputField icon={Tag} label="Nama Barang" value={namaBarang} onChange={setNamaBarang} placeholder="Contoh: Beras Ramos 5kg" required />
           <InputField icon={ScanBarcode} label="Kode Barang" value={kodeBarang} onChange={setKodeBarang} placeholder="(Opsional)" />
@@ -183,16 +183,16 @@ export default function PembelianPage() {
           <button
             type="submit"
             disabled={loadingTombol}
-            className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 text-white font-black text-xl py-4 px-4 rounded-xl flex items-center justify-center gap-2 transition active:scale-95 shadow-md mt-4"
+            className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 text-white font-black text-lg py-4 px-4 rounded-xl flex items-center justify-center gap-2 transition active:scale-95 shadow-md mt-4"
           >
             {loadingTombol ? (
               <>
-                <Loader2 className="w-6 h-6 animate-spin" />
+                <Loader2 className="w-8 h-8 animate-spin" />
                 <span>Menyimpan...</span>
               </>
             ) : (
               <>
-                <CheckCircle2 className="w-6 h-6 stroke-[3]" />
+                <CheckCircle2 className="w-8 h-8 stroke-[3]" />
                 <span>Simpan Pembelian</span>
               </>
             )}
@@ -231,7 +231,7 @@ const InputField: React.FC<InputFieldProps> = ({ icon: Icon, prefix, label, valu
         </span>
       )}
       {prefix && (
-        <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-500 font-bold text-lg">
+        <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-500 font-bold text-base">
           {prefix}
         </span>
       )}
@@ -241,7 +241,7 @@ const InputField: React.FC<InputFieldProps> = ({ icon: Icon, prefix, label, valu
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={`w-full text-lg p-3.5 ${Icon || prefix ? 'pl-12' : 'pl-4'} border-2 border-gray-300 rounded-xl focus:border-emerald-600 focus:outline-none font-medium bg-gray-50 text-black placeholder-gray-500`}
+        className={`w-full text-base p-3.5 ${Icon || prefix ? 'pl-12' : 'pl-4'} border-2 border-gray-300 rounded-xl focus:border-emerald-600 focus:outline-none font-medium bg-gray-50 text-black placeholder-gray-500`}
       />
     </div>
   </div>

@@ -27,21 +27,21 @@ function PengaturanComponent() {
     const fetchSettings = async () => {
       setLoading(true);
       try {
-        // Ambil data dari tabel 'pengaturan' dimana id = 1
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error("User tidak ditemukan!");
+
         const { data, error } = await supabase
           .from("pengaturan")
           .select("*")
-          .eq("id", 1)
-          .single();
+          .eq("user_id", user.id) // Kembali mengambil data berdasarkan user yang login
+          .single(); // Gunakan .single() karena setiap user hanya punya 1 pengaturan
 
-        // Jika ada error (selain baris tidak ditemukan), tampilkan pesan
-        if (error && error.code !== 'PGRST116') {
-          throw error;
-        }
-
-        // Jika data ditemukan, masukkan ke dalam state
         if (data) {
           setSettings(data);
+        }
+        
+        if (error && error.code !== 'PGRST116') {
+          throw error;
         }
       } catch (err: any) {
         Swal.fire({
@@ -62,12 +62,23 @@ function PengaturanComponent() {
     const { name, value } = e.target;
     setSettings(prev => ({ ...prev, [name]: value }));
   };
-
+  
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
     try {
-      const { error } = await supabase.from("pengaturan").upsert({ id: 1, ...settings });
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User tidak ditemukan!");
+
+      // Pisahkan 'id' dari data yang akan disimpan untuk menghindari konflik
+      const { id, ...settingsData } = settings;
+
+      const dataToUpsert = {
+        ...settingsData,
+        user_id: user.id, // Simpan user_id yang sedang login
+      };
+      // Gunakan onConflict: 'user_id' karena kolom ini yang UNIQUE untuk setiap user
+      const { error } = await supabase.from("pengaturan").upsert(dataToUpsert, { onConflict: 'user_id' });
       if (error) throw error;
       Swal.fire({
         icon: "success",
@@ -98,8 +109,6 @@ function PengaturanComponent() {
         confirmButtonColor: "#d33"
       });
     } else {
-      // Cukup refresh halaman, middleware akan otomatis redirect ke /login
-      // karena session sudah tidak ada. Ini mencegah redirect loop.
       router.refresh();
     }
   };
