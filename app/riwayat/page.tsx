@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { History, ArrowUpRight, ArrowDownLeft, Calendar, Loader2, Download, Printer } from "lucide-react";
+import { History, ArrowUpRight, ArrowDownLeft, Calendar, Loader2, Download } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import Swal from "sweetalert2";
 
@@ -74,6 +74,9 @@ export default function RiwayatPage() {
   const fetchRiwayat = async () => {
     setLoadingData(true);
     try {
+      // Ambil user yang sedang login untuk memfilter data
+      const { data: { user } } = await supabase.auth.getUser();
+
       const { data, error } = await supabase
         .from("transaksi")
         .select(`
@@ -84,6 +87,7 @@ export default function RiwayatPage() {
           keterangan,
           barang ( nama_barang, harga_beli )
         `)
+        .eq('user_id', user?.id) // <-- TAMBAHKAN: Filter riwayat berdasarkan user
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -289,7 +293,7 @@ export default function RiwayatPage() {
                     item.jenis_transaksi === "MASUK" ? "text-emerald-700" : "text-rose-700"
                   }`}>
                     {item.jenis_transaksi === "MASUK" ? "+" : "-"}
-                    {item.jumlah} pcs
+                    {item.jumlah} Box
                   </span>
                 </div>
 
@@ -306,16 +310,6 @@ export default function RiwayatPage() {
                     <Calendar className="w-3.5 h-3.5 shrink-0" />
                     <span>{formatTanggal(item.created_at)}</span>
                   </div>
-                  
-                  {item.jenis_transaksi === "KELUAR" && (
-                    <Link
-                      href={`/cetak_nota?id=${item.id}`}
-                      className="flex items-center gap-1 text-blue-600 hover:underline"
-                    >
-                      <Printer className="w-3.5 h-3.5" />
-                      Cetak Nota
-                    </Link>
-                  )}
                 </div>
               </div>
             </div>

@@ -23,9 +23,13 @@ export default function StokPage() {
   // Fungsi untuk mengambil data dari Supabase, menggantikan SWR
   const fetchData = async () => {
     setLoadingData(true);
+    // Ambil user yang sedang login untuk memfilter data
+    const { data: { user } } = await supabase.auth.getUser();
+
     const { data, error: fetchError } = await supabase
       .from("barang")
       .select("id, nama_barang, stok")
+      .eq('user_id', user?.id) // <-- TAMBAHKAN: Filter barang berdasarkan user
       .order("created_at", { ascending: false });
 
     if (fetchError) setError(fetchError);
@@ -134,10 +138,14 @@ export default function StokPage() {
         return;
       }
 
+      // Ambil user yang sedang login untuk disimpan
+      const { data: { user } } = await supabase.auth.getUser();
+
       // Catat ke tabel 'transaksi'
       const { error: transasiError } = await supabase
       .from("transaksi")
       .insert({
+        user_id: user?.id, // <-- TAMBAHKAN: Simpan ID user di transaksi
         barang_id: id,
         jenis_transaksi: "MASUK",
         jumlah: jumlahBaru,

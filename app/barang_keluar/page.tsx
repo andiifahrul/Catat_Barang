@@ -25,9 +25,13 @@ export default function BarangKeluarPage() {
   // ========================================================
   const fetchDaftarBarang = async () => {
     setLoadingData(true);
+    // Ambil user yang sedang login untuk memfilter data
+    const { data: { user } } = await supabase.auth.getUser();
+
     const { data, error } = await supabase
       .from("barang")
       .select("id, nama_barang, stok")
+      .eq('user_id', user?.id) // <-- TAMBAHKAN: Filter barang berdasarkan user
       .order("nama_barang", { ascending: true }); 
 
     if (error) {
@@ -92,11 +96,15 @@ export default function BarangKeluarPage() {
 
     const stokBaru = produkData.stok - qty;
 
+    // Ambil user yang sedang login untuk disimpan
+    const { data: { user } } = await supabase.auth.getUser();
+
     const { error: errorTransaksi } = await supabase
       .from("transaksi")
       .insert({
           barang_id: barangTerpilih,
           jenis_transaksi: "KELUAR",
+          user_id: user?.id, // <-- TAMBAHKAN: Simpan ID user di transaksi
           jumlah: qty,
           keterangan: keterangan || "Penjualan",
         });

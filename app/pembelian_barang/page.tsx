@@ -61,6 +61,9 @@ export default function PembelianPage() {
 
     setLoadingTombol(true);
 
+    // Ambil user yang sedang login untuk disimpan
+    const { data: { user } } = await supabase.auth.getUser();
+
     // 1. Daftarkan produk baru ke tabel 'barang'
     const { data: barangBaru, error: errorBarang } = await supabase
       .from("barang")
@@ -70,6 +73,7 @@ export default function PembelianPage() {
         ukuran: ukuran.trim() || null,
         harga_beli: hargaBeliAngka,
         stok: jumlahBeli, // Stok awal langsung diisi dari jumlah pembelian
+        user_id: user?.id, // <-- TAMBAHKAN: Simpan ID user yang membuat
       })
       .select() // Wajib ada .select() untuk mendapatkan data yang baru dibuat
       .single(); // .single() untuk mengambil objeknya langsung
@@ -100,6 +104,7 @@ export default function PembelianPage() {
       .from("transaksi")
       .insert({
         barang_id: barangBaru.id, // Gunakan ID dari barang yang baru dibuat
+        user_id: user?.id, // <-- TAMBAHKAN: Simpan juga ID user di transaksi
         jenis_transaksi: "MASUK",
         jumlah: jumlahBeli,
         keterangan: `Pembelian awal produk baru`,

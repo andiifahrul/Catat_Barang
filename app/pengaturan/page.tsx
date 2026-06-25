@@ -98,7 +98,9 @@ function PengaturanComponent() {
         confirmButtonColor: "#d33"
       });
     } else {
-      router.push("/login"); // Redirect to login page after successful logout
+      // Cukup refresh halaman, middleware akan otomatis redirect ke /login
+      // karena session sudah tidak ada. Ini mencegah redirect loop.
+      router.refresh();
     }
   };
 
@@ -137,10 +139,10 @@ function PengaturanComponent() {
           </div>
 
           <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4">
-            <Link href="/" className="w-full text-center bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2">
+            <button type="button" onClick={() => router.back()} className="w-full text-center bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2">
               <ArrowLeft className="w-5 h-5" />
               Kembali
-            </Link>
+            </button>
             <button type="submit" disabled={isSaving || loading} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-md active:scale-95 transition flex items-center justify-center gap-2 disabled:bg-blue-400 disabled:cursor-not-allowed">
               {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
               {isSaving ? "Menyimpan..." : "Simpan Perubahan"}
